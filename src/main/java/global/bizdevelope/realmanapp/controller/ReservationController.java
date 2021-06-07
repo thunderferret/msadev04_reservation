@@ -6,6 +6,7 @@ import global.bizdevelope.realmanapp.domain.User;
 import global.bizdevelope.realmanapp.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -15,6 +16,16 @@ public class ReservationController {
 
 
     @Autowired ReservationService service;
+
+
+
+    @GetMapping("/reservation/test")
+    public String reservationTest(){
+        service.reservationTest();
+        System.out.println("YEAHEYEHAEYEHAEYEAHE");
+        return "OK OK";
+    }
+
 
     @GetMapping("/reservation/customerlists")
     public List getAllReservationLists(HttpServletRequest req){
