@@ -1,4 +1,7 @@
 spring:
+  cloud:
+    stream:
+      kafka:
   h2:
     console:
       path: /h2console

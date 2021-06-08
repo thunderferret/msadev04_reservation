@@ -22,4 +22,5 @@ public class Reservation {
     Date concertDate;
     String customerName;
     String customerId;
+    String reservationStatus;
 }

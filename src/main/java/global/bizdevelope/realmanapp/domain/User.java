@@ -20,6 +20,4 @@ public class User {
     private String customerName;
     private String userId;
 
-
-
 }
