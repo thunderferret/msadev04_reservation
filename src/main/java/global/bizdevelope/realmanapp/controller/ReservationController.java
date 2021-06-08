@@ -36,7 +36,6 @@ public class ReservationController {
     public String reservation(@ModelAttribute User user){
 
 
-        System.out.println(user);
 
 
         Reservation reservation = new Reservation();
@@ -45,5 +44,7 @@ public class ReservationController {
         service.reserve(reservation);
         return "User Request Accepted";
     }
+
+
 
 }
