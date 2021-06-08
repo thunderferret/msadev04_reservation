@@ -2,6 +2,10 @@ spring:
   cloud:
     stream:
       kafka:
+        producer:
+
+
+
   h2:
     console:
       path: /h2console

@@ -3,6 +3,7 @@ package global.bizdevelope.realmanapp;
 
 
 import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 
@@ -14,8 +15,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 @SpringBootApplication
 public class ReservationApplication {
+    @Autowired
+    private KafkaTemplate<String, String> template;
     public static void main(String[] args) {
-
         SpringApplication.run(ReservationApplication.class, args);
     }
 
@@ -28,7 +30,7 @@ public class ReservationApplication {
     }
 
     @Bean
-    public ApplicationRunner runner(KafkaTemplate<String, String> template) {
+    public ApplicationRunner runner() {
         return args -> {
             template.send("topic1", "test");
         };
