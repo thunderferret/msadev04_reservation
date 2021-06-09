@@ -58,10 +58,18 @@
 
 1. SAGA 패턴
 
+1. Saga
 1. CQRS
 1. Correlation
-1.
-1. blah blah
+1. Req/Resp
+1. Gateway
+1. Deploy/ Pipeline
+1. Circuit Breaker
+1. Autoscale (HPA)
+1. Zero-downtime deploy (Readiness Probe)
+1. Config Map/ Persistence Volume
+1. Polyglot
+1. Self-healing (Liveness Probe)
 
 # 분석/설계
 
