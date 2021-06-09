@@ -52,7 +52,7 @@ phases:
             - port: 8080
               targetPort: 8080
           selector:
-            app: $_PROJECT_NAME
+        app: $_PROJECT_NAME
         EOF
       - |
         cat  <<EOF | kubectl apply -f -
