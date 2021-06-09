@@ -1,0 +1,37 @@
+apiversion: apps/v1
+kind: Deployment
+metadata:
+  name: $_PROJECT_NAME
+  labels:
+    app: $_PROJECT_NAME
+spec:
+   replicas: 1
+   selector:
+     matchLabels:
+       app: $_PROJECT_NAME
+   template:
+     metadata:
+       labels:
+         app: $_PROJECT_NAME
+     spec:
+       containers:
+         - name: $_PROJECT_NAME
+           image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$_PROJECT_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
+           ports:
+             - containerPort: 8080
+           readinessProbe:
+             httpGet:
+               path: /actuator/health
+               port: 8080
+             initialDelaySeconds: 10
+             timeoutSeconds: 2
+             periodSeconds: 5
+             failureThreshold: 10
+           livenessProbe:
+             httpGet:
+               path: /actuator/health
+               port: 8080
+             initialDelaySeconds: 120
+             timeoutSeconds: 2
+             periodSeconds: 5
+             failureThreshold: 5
