@@ -2,13 +2,13 @@ version: 0.2
 
 env:
   variables:
-    _PROJECT_NAME: "user08-payment"
+    _PROJECT_NAME: "user08-reservation"
 
 phases:
   install:
     runtime-versions:
       java: corretto11
-      docker: 20
+      docker: 19
     commands:
       - echo install kubectl
       - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
