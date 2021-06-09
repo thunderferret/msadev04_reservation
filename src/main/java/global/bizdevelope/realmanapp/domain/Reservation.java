@@ -19,7 +19,6 @@ public class Reservation {
 
 
     Long ticketNumber;
-    Date concertDate;
     String customerName;
     String customerId;
     String reservationStatus;
