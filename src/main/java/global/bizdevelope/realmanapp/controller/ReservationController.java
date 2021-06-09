@@ -26,6 +26,21 @@ public class ReservationController {
     @Autowired
     ReservationService service;
 
+    @GetMapping("/reservation/customerlists")
+    public List getAllReservationLists(HttpServletRequest req){
+        return service.findAll();
+    }
+
+    @PostMapping("/reservationreq")
+    public String reservation(@ModelAttribute User user){
+        Reservation reservation = new Reservation();
+        reservation.setCustomerName(user.getCustomerName());
+        reservation.setCustomerId(user.getUserId());
+        service.reserve(reservation);
+        return "User Request Accepted";
+    }
+
+
 
     @GetMapping("/reservation/test")
     public String reservationTest(){
@@ -41,23 +56,6 @@ public class ReservationController {
     }
 
 
-    @GetMapping("/reservation/customerlists")
-    public List getAllReservationLists(HttpServletRequest req){
-        return service.findAll();
-    }
-
-    @PostMapping("/reservationreq")
-    public String reservation(@ModelAttribute User user){
-
-
-
-
-        Reservation reservation = new Reservation();
-        reservation.setCustomerName(user.getCustomerName());
-        reservation.setCustomerId(user.getUserId());
-        service.reserve(reservation);
-        return "User Request Accepted";
-    }
 
 
 
