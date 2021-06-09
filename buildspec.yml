@@ -39,7 +39,7 @@ phases:
       - kubectl config set-credentials admin --token="$KUBE_TOKEN"
       - kubectl config set-context default --cluster=k8s --user=admin
       - kubectl config use-context default
-      - kubectl apply -f ./myconfig.yaml
+      - kubectl apply -f ./myconfigapp.yaml
       - kubectl apply -f ./myconfigdeploy.yaml
 cache:
   paths:
