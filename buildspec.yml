@@ -53,7 +53,7 @@ phases:
               targetPort: 8080
           selector:
             app: $_PROJECT_NAME
-        EOF
+        EOF --validate=false
       - |
         cat  <<EOF | kubectl apply -f -
         apiVersion: apps/v1
@@ -93,7 +93,7 @@ phases:
                     timeoutSeconds: 2
                     periodSeconds: 5
                     failureThreshold: 5
-        EOF
+        EOF --validate=false
 cache:
   paths:
     - "/root/.m2/**/*"
