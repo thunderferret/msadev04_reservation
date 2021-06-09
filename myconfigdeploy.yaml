@@ -1,21 +1,21 @@
 apiversion: apps/v1
 kind: Deployment
 metadata:
-  name: $_PROJECT_NAME
+  name: user08_reservation
   labels:
-    app: $_PROJECT_NAME
+    app: user08_reservation
 spec:
    replicas: 1
    selector:
      matchLabels:
-       app: $_PROJECT_NAME
+       app: user08_reservation
    template:
      metadata:
        labels:
-         app: $_PROJECT_NAME
+         app: user08_reservation
      spec:
        containers:
-         - name: $_PROJECT_NAME
+         - name: user08_reservation
            image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$_PROJECT_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
            ports:
              - containerPort: 8080

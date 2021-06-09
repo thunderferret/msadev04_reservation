@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: $_PROJECT_NAME
+  name: user08_reservation
   labels:
-    app: $_PROJECT_NAME
+    app: user08_reservation
 spec:
   ports:
     - port: 8080
       targetPort: 8080
   selector:
-    app: $_PROJECT_NAME
+    app: user08_reservation
