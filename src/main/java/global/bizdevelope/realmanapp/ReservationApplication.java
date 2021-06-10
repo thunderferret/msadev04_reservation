@@ -22,6 +22,4 @@ public class ReservationApplication {
                 .replicas(1)
                 .build();
     }
-
-
 }

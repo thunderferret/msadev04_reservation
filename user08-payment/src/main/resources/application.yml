@@ -1,0 +1,14 @@
+spring:
+  kafka:
+    consumer:
+      auto-offset-reset: earliest
+
+  h2:
+    console:
+      path: /h2console
+      settings:
+        web-admin-password: "1234"
+
+
+server:
+  port: 8082

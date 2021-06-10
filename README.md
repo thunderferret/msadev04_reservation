@@ -135,7 +135,7 @@ jar 등으로 배포하는 것을 권장드림
 1. 예매가 취소되면 결제도 취소된다
 1. 고객이 예매 상태를 중간중간 조회할 수 있다
 
-비기능적 요구사항
+### 비기능적 요구사항
 1. 트랜잭션
     1. 결제가 안된 예약건은 아예 좌석 배치가 성립되지 않아야 한다  Sync 호출 
 1. 장애격리
@@ -269,7 +269,7 @@ Transcational 하게 결제를 처리하고, Accepted 와 Refused 여부만 전�
 
 # 예매 상태 확인
 http get localhost:8083/myticket{userId}
-예매 상태를 조회한다 (CQRS 적용
+예매 상태를 조회한다 (CQRS 적용됨)
 
 ```
 
@@ -430,91 +430,101 @@ http post localhost:8081/cancelreservation userId="test1@naver.com"   #Success
 - 이를 위하여 결제이력에 기록을 남긴 후에 곧바로 결제승인이 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
  
 ```
-package fooddelivery;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
 
-@Entity
-@Table(name="결제이력_table")
-public class 결제이력 {
+@Service
+public class Cancelled {
 
- ...
-    @Transactional
-    public String cancelReservation(User user){
-        List<Reservation> reservationList;
+    @Autowired
+    private KafkaTemplate<String , String> kafkaTemplate;
 
-        try{
-        reservationList=reservationRepository.findByCustomerId(user.getUserId());
-        if(reservationList==null) {
-            return "Refused";
-        }
-        for (Reservation r:reservationList){
-            cancelled.publish(user.getUserId()+":Cancelled:"+r.getId());
-            reservationRepository.delete(r.getId());
-        }
-        }catch (Exception e){
-            return "Error";
-        }
-        return "Cancelled";
+    public Cancelled(KafkaTemplate<String, String> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
     }
+
+    public void publish(String message) {
+        this.kafkaTemplate.send("topic1", message);
+    }
+}
+
+
+### payment Service 부분
+
+    @Autowired
+    private KafkaTemplate<String , String> kafkaTemplate;
+
+    public void publish(String message) {
+        this.kafkaTemplate.send("topic1", message);
+    }
+
+    @Transactional
+    public boolean approveCheck(User user){
+        PayRequest payRequest = new PayRequest();
+        payRequest.setCustomerId(user.getUserId());
+        publish(user.getUserId()+":PayRequest:"+payRequest.getId());
+
+        Boolean isApproved = false;
+        try{
+            isApproved=userRepository.findByUserId(user.getUserId()).isBalance();
+        }catch (Exception e){
+            payRequest.setPaymentStatus("Fail");
+            isApproved=false;
+        }
+        payRequest.setPaymentStatus("Success");
+        payRequestRepository.save(payRequest);
+        saveApproveInfo(user);
+        return isApproved;
+
+    }
+
+
+
+
 ```
 - Mypage 에서는 해당 Event 를 수신받아 처리한다
 
 ```
-package fooddelivery;
+app.py
 
 ...
+from kafka import KafkaConsumer
+from json import loads
+import time
 
-@Service
-public class PolicyHandler{
+  # topic, broker list
+consumer = KafkaConsumer('topic1', bootstrap_servers=['localhost:9092'], auto_offset_reset='earliest', enable_auto_commit=True, group_id='my-group', consumer_timeout_ms=1000 ) # consumer list를 가져온다
+print('[begin] get consumer list')
 
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whenever결제승인됨_주문정보받음(@Payload 결제승인됨 결제승인됨){
+while True:
+  time.sleep(3)
+  for message in consumer:
+    print("Topic: %s, Partition: %d, Offset: %d, Key: %s, Value: %s" % ( message.topic, message.partition, message.offset, message.key, message.value ))
+    print('[end] get consumer list')
+    s1=str(message.value).split(":")
+    print(s1)
+    if(s1[0]=="reserved"):
+      print("reserved"+s1[1:])
+    elif(s1[0]=="cancelled"):
+      print("cancelled")
+    else:
+      print(s1)
 
-        if(결제승인됨.isMe()){
-            System.out.println("##### listener 주문정보받음 : " + 결제승인됨.toJson());
-            // 주문 정보를 받았으니, 요리를 슬슬 시작해야지..
-            
-        }
-    }
 
-}
+
 
 ```
-실제 구현을 하자면, 카톡 등으로 점주는 노티를 받고, 요리를 마친후, 주문 상태를 UI에 입력할테니, 우선 주문정보를 DB에 받아놓은 후, 이후 처리는 해당 Aggregate 내에서 하면 되겠다.:
+각 Topic1 에서 나온 메세지를 문자열로 split 처리하여 DB 에 넣으면 되겠다.
+
+
+
+## 이하 TBD
   
 ```
-  @Autowired 주문관리Repository 주문관리Repository;
-  
-  @StreamListener(KafkaProcessor.INPUT)
-  public void whenever결제승인됨_주문정보받음(@Payload 결제승인됨 결제승인됨){
-
-      if(결제승인됨.isMe()){
-          카톡전송(" 주문이 왔어요! : " + 결제승인됨.toString(), 주문.getStoreId());
-
-          주문관리 주문 = new 주문관리();
-          주문.setId(결제승인됨.getOrderId());
-          주문관리Repository.save(주문);
-      }
-  }
 
 ```
 
-상점 시스템은 주문/결제와 완전히 분리되어있으며, 이벤트 수신에 따라 처리되기 때문에, 상점시스템이 유지보수로 인해 잠시 내려간 상태라도 주문을 받는데 문제가 없다:
-```
-# 상점 서비스 (store) 를 잠시 내려놓음 (ctrl+c)
-
-#주문처리
-http localhost:8081/orders item=통닭 storeId=1   #Success
-http localhost:8081/orders item=피자 storeId=2   #Success
-
-#주문상태 확인
-http localhost:8080/orders     # 주문상태 안바뀜 확인
-
-#상점 서비스 기동
-cd 상점
-mvn spring-boot:run
-
-#주문상태 확인
-http localhost:8080/orders     # 모든 주문의 상태가 "배송됨"으로 확인
 ```
 
 
