@@ -1,4 +1,4 @@
-![](./images/01_msaez.png){:height="50%" width="50%"}
+![](./images/msaproove.png){:height="50%" width="50%"}
 
 # 예제 -  콘서트 예매 어플리케이션
 
@@ -24,7 +24,7 @@ K8s 에서 Docker를 Deprecating하면서 Docker runtime 시 Docker20 이상 버
 예시
 Local : O
 Assessment : X
-(로컬에서는 작동하나, Asseesment 환경에서는 작동하지 않음)
+(로컬에서는 작동하나, Assessment 환경에서는 작동하지 않음 fix 필요)
 
 
 1. Saga
@@ -55,13 +55,19 @@ Spring cloud Gateway 이용
 Local : 0
 Assessment : O
 
+![](./images/gatewayproove.png){:height="50%" width="50%"}
+
+
 1. Deploy/ Pipeline
 AWS Codebuild 사용
 Local : 0
 Assessment : O
 
+![](./images/pipelineproove.png){:height="50%" width="50%"}
+
+
 1. Circuit Breaker
-OpenFeign Client 사용
+OpenFeign Client 로 교체중  Hystrix Deprecated Issue
 Local : 0
 Assessment : 0
 
@@ -75,15 +81,19 @@ Local : X
 Assessment : X
 
 
-1. Config Map/ Persistence Volume
+1. Persistence Volume
 Kafka PV 배포
 Local : 해당사항 없음
-Assessment : X
+Assessment : O
+카프카 PV 업로드
+
+![](./images/pvproof.png){:height="50%" width="50%"}
 
 1. Polyglot
 Python 으로 myapp 구현
 Local : 0
 Assessment : X
+![](./images/polyglotproove.png){:height="50%" width="50%"}
 
 1. Self-healing (Liveness Probe)
 Local : X
@@ -94,15 +104,17 @@ Assessment : X
 
 ![](./images/01_msaez_team.png){:height="50%" width="50%"}
 
-Team 프로젝트에서, 영화 예매 어플리케이션을 구현 하였다.
+구 Team 프로젝트에서, 영화 예매 어플리케이션을 구현 하였다.
+이전에 있던 프로젝트는 내가 주로 개발하는 환경이 아니기도 하고,
 해당 어플리케이션에서 스프링 부트 버전이나, maven, Docker Version 등을 변경하고자
+
 Zero - Base 에서 다시 어플리케이션을 구현하였다.
 
 Gradle 7.x 과 SpringBoot 2.5.X 버전, K8S 1.9, Docker 20.0.4 를 사용한 환경에서 작동하나,
 
 EKS 1.14, Docker19 등에서는 현재 설정 에러로 Gradle 기반 프로젝트가 작동하지 않는 상황.
-(Docker 19 버전 이상을 지원하지 않는다)
-jar 등으로 배포하는 것을 권장한다
+(Docker 19 버전 이상을 지원하지 않음)
+jar 등으로 배포하는 것을 권장
 
 기능적 요구사항
 1. 고객이 예매를 한다.
