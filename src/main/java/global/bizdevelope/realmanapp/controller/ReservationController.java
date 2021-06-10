@@ -33,13 +33,15 @@ public class ReservationController {
 
     @PostMapping("/reservationreq")
     public String reservation(@ModelAttribute User user){
-        Reservation reservation = new Reservation();
-        reservation.setCustomerName(user.getCustomerName());
-        reservation.setCustomerId(user.getUserId());
-        service.reserve(reservation);
+        service.reserve(user);
         return "User Request Accepted";
     }
 
+    @PostMapping("/cancelreservation")
+    public String cancelreservation(@ModelAttribute User user){
+        service.cancelReservation(user);
+        return "User cancel Accepted";
+    }
 
 
     @GetMapping("/reservation/test")
@@ -54,9 +56,6 @@ public class ReservationController {
         this.reserved.publish("FUFUFUFUF DKDKDKDKKDKD");
         return "Kafka Published";
     }
-
-
-
 
 
 }
