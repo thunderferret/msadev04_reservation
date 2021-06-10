@@ -43,12 +43,22 @@ public class ReservationController {
         return "User cancel Accepted";
     }
 
+    @GetMapping("/reservation/posttest")
+    @ResponseBody
+    public String postTest(){
+        String t = service.postTest();
+        System.out.println(t);
+
+        return "post Test Succeeded";
+    }
 
     @GetMapping("/reservation/test")
     public String reservationTest(){
-        service.reservationTest();
-        System.out.println("YEAHEYEHAEYEHAEYEAHE");
-        return "OK OK";
+        User user = new User();
+        user.setUserId("vpflt992@gmail.com");
+        user.setCustomerName("Kim In TAE");
+        service.approveCheck(user);
+        return "TEST PASSED";
     }
 
     @GetMapping("/reservation/kafkatest")
