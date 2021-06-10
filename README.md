@@ -1,6 +1,6 @@
-![](./images/RUMY.png){:height="50%" width="50%"}
+![](./images/01_msaez.png){:height="50%" width="50%"}
 
-# 예제 - 루미 콘서트 예매 어플리케이션
+# 예제 -  콘서트 예매 어플리케이션
 
 본 예제는 MSA/DDD/Event Storming/EDA 를 포괄하는 분석/설계/구현/운영 전단계를 커버하도록 구성한 예제입니다.
 이는 클라우드 네이티브 애플리케이션의 모델, 구현, 운영을 포함합니다.
@@ -9,29 +9,100 @@
 
 # Table of contents
 
-- [예제 - 음식배달](#---)
-  - [서비스 시나리오](#서비스-시나리오)
-  - [체크포인트](#체크포인트)
-  - [분석/설계](#분석설계)
-  - [구현:](#구현-)
-    - [DDD 의 적용](#ddd-의-적용)
-    - [폴리글랏 퍼시스턴스](#폴리글랏-퍼시스턴스)
-    - [폴리글랏 프로그래밍](#폴리글랏-프로그래밍)
-    - [동기식 호출 과 Fallback 처리](#동기식-호출-과-Fallback-처리)
-    - [비동기식 호출 과 Eventual Consistency](#비동기식-호출-과-Eventual-Consistency)
-  - [운영](#운영)
-    - [CI/CD 설정](#cicd설정)
-    - [동기식 호출 / 서킷 브레이킹 / 장애격리](#동기식-호출-서킷-브레이킹-장애격리)
-    - [오토스케일 아웃](#오토스케일-아웃)
-    - [무정지 재배포](#무정지-재배포)
-  - [신규 개발 조직의 추가](#신규-개발-조직의-추가)
+
+# 체크포인트
+Local : k8s 1.21 ,Docker 20, Gradle 7.2, Springboot 2.5.0
+Assessment : k8s 1.17 ,Docker 19, Gradle 7.x, Springboot 2.2.x ~ 2.5.0
+
+Local 환경에서 작동하나, Assessment 환경에서 Gradle 작동하지 않는 경우 다수 발견
+-> https://acloudguru.com/blog/engineering/kubernetes-is-deprecating-docker-what-you-need-to-know
+K8s 에서 Docker를 Deprecating하면서 Docker runtime 시 Docker20 이상 버전과 호환되는 설정이 다른 것으로 추정
+-> Local Docker 에서는 정상적으로 작동되는 것 확인
+
+따라서 로컬과 Assessment 환경에서 작동하는 것 병기
+
+예시
+Local : O
+Assessment : X
+(로컬에서는 작동하나, Asseesment 환경에서는 작동하지 않음)
+
+
+1. Saga
+Myapp 에서 구현
+Local : 0
+Assessment : X
+(Gradle 기반 서버가 작동하지 않으므로)
+
+1. CQRS
+Event Kafka 로 발송하여, Python Consumer 에서 볼 수 있음
+Local : 0
+Assessment : X
+
+1. Correlation
+REST 를 이용한 Sync 호출 사용
+Local : 0
+Assessment : X
+
+
+1. Req/Resp
+REST 이용
+Local : 0
+Assessment : X
+
+
+1. Gateway
+Spring cloud Gateway 이용
+Local : 0
+Assessment : O
+
+1. Deploy/ Pipeline
+AWS Codebuild 사용
+Local : 0
+Assessment : O
+
+1. Circuit Breaker
+OpenFeign Client 사용
+Local : 0
+Assessment : 0
+
+1. Autoscale (HPA)
+Local : 해당사항 없음
+Assessment : 0
+
+
+1. Zero-downtime deploy (Readiness Probe)
+Local : X
+Assessment : X
+
+
+1. Config Map/ Persistence Volume
+Kafka PV 배포
+Local : 해당사항 없음
+Assessment : X
+
+1. Polyglot
+Python 으로 myapp 구현
+Local : 0
+Assessment : X
+
+1. Self-healing (Liveness Probe)
+Local : X
+Assessment : X
+
 
 # 서비스 시나리오
 
-루미는 AOMG에 들어갈 신인 개수입니다.
-힙합을 하는 강아지라 예매가 폭증하여, 해당 예매 어플리케이션을
-마이크로서비스 기반으로 제작해 달라는 AOMG CEO 의 요청이 있었습니다.
-요구사항은 다음과 같습니다
+![](./images/01_msaez_team.png){:height="50%" width="50%"}
+
+Team 프로젝트에서, 영화 예매 어플리케이션을 구현 하였다.
+해당 어플리케이션에서 스프링 부트 버전이나, maven, Docker Version 등을 변경하고자
+Zero - Base 에서 다시 어플리케이션을 구현하였다.
+
+Gradle 7.x 과 SpringBoot 2.5.X 버전, K8S 1.9, Docker 20.0.4 를 사용한 환경에서 작동하나,
+
+EKS 1.14, Docker19 등에서는 현재 설정 에러로 Gradle 기반 프로젝트가 작동하지 않는 상황.
+(Docker 19 버전 이상을 지원하지 않는다)
+jar 등으로 배포하는 것을 권장한다
 
 기능적 요구사항
 1. 고객이 예매를 한다.
@@ -53,108 +124,32 @@
     1. 잔여좌석 상태가 바뀔때마다 카톡 등으로 알림을 줄 수 있어야 한다  Event driven
 
 
-# 체크포인트
-
-
-1. SAGA 패턴
-
-1. Saga
-1. CQRS
-1. Correlation
-1. Req/Resp
-1. Gateway
-1. Deploy/ Pipeline
-1. Circuit Breaker
-1. Autoscale (HPA)
-1. Zero-downtime deploy (Readiness Probe)
-1. Config Map/ Persistence Volume
-1. Polyglot
-1. Self-healing (Liveness Probe)
-
 # 분석/설계
 
 
-## AS-IS 조직 (Horizontally-Aligned)
-  ![image](https://user-images.githubusercontent.com/487999/79684144-2a893200-826a-11ea-9a01-79927d3a0107.png)
-
-## TO-BE 조직 (Vertically-Aligned)
-  ![image](https://user-images.githubusercontent.com/487999/79684159-3543c700-826a-11ea-8d5f-a3fc0c4cad87.png)
-
-
-## Event Storming 결과
-* MSAEz 로 모델링한 이벤트스토밍 결과:  http://msaez.io/#/storming/nZJ2QhwVc4NlVJPbtTkZ8x9jclF2/every/a77281d704710b0c2e6a823b6e6d973a/-M5AV2z--su_i4BfQfeF
-
-
-### 이벤트 도출
-![image](https://user-images.githubusercontent.com/487999/79683604-47bc0180-8266-11ea-9212-7e88c9bf9911.png)
-
-### 부적격 이벤트 탈락
-![image](https://user-images.githubusercontent.com/487999/79683612-4b4f8880-8266-11ea-9519-7e084524a462.png)
-
-    - 과정중 도출된 잘못된 도메인 이벤트들을 걸러내는 작업을 수행함
-        - 주문시>메뉴카테고리선택됨, 주문시>메뉴검색됨 :  UI 의 이벤트이지, 업무적인 의미의 이벤트가 아니라서 제외
-
-### 액터, 커맨드 부착하여 읽기 좋게
-![image](https://user-images.githubusercontent.com/487999/79683614-4ee30f80-8266-11ea-9a50-68cdff2dcc46.png)
-
-### 어그리게잇으로 묶기
-![image](https://user-images.githubusercontent.com/487999/79683618-52769680-8266-11ea-9c21-48d6812444ba.png)
-
-    - app의 Order, store 의 주문처리, 결제의 결제이력은 그와 연결된 command 와 event 들에 의하여 트랜잭션이 유지되어야 하는 단위로 그들 끼리 묶어줌
-
-### 바운디드 컨텍스트로 묶기
-
-![image](https://user-images.githubusercontent.com/487999/79683625-560a1d80-8266-11ea-9790-40d68a36d95d.png)
-
-    - 도메인 서열 분리 
-        - Core Domain:  app(front), store : 없어서는 안될 핵심 서비스이며, 연견 Up-time SLA 수준을 99.999% 목표, 배포주기는 app 의 경우 1주일 1회 미만, store 의 경우 1개월 1회 미만
-        - Supporting Domain:   marketing, customer : 경쟁력을 내기위한 서비스이며, SLA 수준은 연간 60% 이상 uptime 목표, 배포주기는 각 팀의 자율이나 표준 스프린트 주기가 1주일 이므로 1주일 1회 이상을 기준으로 함.
-        - General Domain:   pay : 결제서비스로 3rd Party 외부 서비스를 사용하는 것이 경쟁력이 높음 (핑크색으로 이후 전환할 예정)
-
-### 폴리시 부착 (괄호는 수행주체, 폴리시 부착을 둘째단계에서 해놔도 상관 없음. 전체 연계가 초기에 드러남)
-
-![image](https://user-images.githubusercontent.com/487999/79683633-5aced180-8266-11ea-8f42-c769eb88dfb1.png)
-
-### 폴리시의 이동과 컨텍스트 매핑 (점선은 Pub/Sub, 실선은 Req/Resp)
-
-![image](https://user-images.githubusercontent.com/487999/79683641-5f938580-8266-11ea-9fdb-4e80ff6642fe.png)
-
-### 완성된 1차 모형
-
-![image](https://user-images.githubusercontent.com/487999/79683646-63bfa300-8266-11ea-9bc5-c0b650507ac8.png)
-
-    - View Model 추가
-
 ### 1차 완성본에 대한 기능적/비기능적 요구사항을 커버하는지 검증
 
-![image](https://user-images.githubusercontent.com/487999/79684167-3ecd2f00-826a-11ea-806a-957362d197e3.png)
+![](./images/03_sc1.png){:height="50%" width="50%"}
 
-    - 고객이 메뉴를 선택하여 주문한다 (ok)
+    - 고객이 Ticket 을 신청한다 (ok)
     - 고객이 결제한다 (ok)
-    - 주문이 되면 주문 내역이 입점상점주인에게 전달된다 (ok)
-    - 상점주인이 확인하여 요리해서 배달 출발한다 (ok)
+    - 결제가 되면, 좌석이 줄어든다 (ok)
+    - MyPage 에서 해당 Event 를 수신한다 (ok)
 
-![image](https://user-images.githubusercontent.com/487999/79684170-47256a00-826a-11ea-9777-e16fafff519a.png)
-    - 고객이 주문을 취소할 수 있다 (ok)
-    - 주문이 취소되면 배달이 취소된다 (ok)
-    - 고객이 주문상태를 중간중간 조회한다 (View-green sticker 의 추가로 ok) 
-    - 주문상태가 바뀔 때 마다 카톡으로 알림을 보낸다 (?)
-
-
-### 모델 수정
-
-![image](https://user-images.githubusercontent.com/487999/79684176-4e4c7800-826a-11ea-8deb-b7b053e5d7c6.png)
-    
-    - 수정된 모델은 모든 요구사항을 커버함.
+![](./images/04_sc2.png){:height="50%" width="50%"}
+    - 고객이 Ticket 을 취소한다 (Ok)
+    - 결제 모듈에서 과거 결제 이력을 변경한다(Ok)
+    - 취소가 되면 취소 메세지를 전송한다
 
 ### 비기능 요구사항에 대한 검증
 
 ![image](https://user-images.githubusercontent.com/487999/79684184-5c9a9400-826a-11ea-8d87-2ed1e44f4562.png)
 
     - 마이크로 서비스를 넘나드는 시나리오에 대한 트랜잭션 처리
-        - 고객 주문시 결제처리:  결제가 완료되지 않은 주문은 절대 받지 않는다는 경영자의 오랜 신념(?) 에 따라, ACID 트랜잭션 적용. 주문와료시 결제처리에 대해서는 Request-Response 방식 처리
-        - 결제 완료시 점주연결 및 배송처리:  App(front) 에서 Store 마이크로서비스로 주문요청이 전달되는 과정에 있어서 Store 마이크로 서비스가 별도의 배포주기를 가지기 때문에 Eventual Consistency 방식으로 트랜잭션 처리함.
-        - 나머지 모든 inter-microservice 트랜잭션: 주문상태, 배달상태 등 모든 이벤트에 대해 카톡을 처리하는 등, 데이터 일관성의 시점이 크리티컬하지 않은 모든 경우가 대부분이라 판단, Eventual Consistency 를 기본으로 채택함.
+        - 고객 주문시 결제처리: 결제시 티켓 에서는 결제 회사에서는 결제 여부만을 전송받는다.
+        - 결제 완료시 myApp, Publish: Cloud Stream 은
+        - REST 로 구현 : Spring Cloud는 2020 초에 지원이 끝나, 현재 Gradle 이나 Springboot 버전에서 작동을 안하거나 K8s의 구 버전에서 에러
+        - 나머지 모든 inter-microservice 트랜잭션
 
 
 
@@ -173,190 +168,211 @@
 
 분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 각 BC별로 대변되는 마이크로 서비스들을 스프링부트와 파이선으로 구현하였다. 구현한 각 서비스를 로컬에서 실행하는 방법은 아래와 같다 (각자의 포트넘버는 8081 ~ 808n 이다)
 
+
 ```
-cd app
-mvn spring-boot:run
+티켓 예매
+- 티켓을 예약받고, 결제에 User 정보를 보내 결제 확인만 한다
+- 결제 확인이 되었을 경우, 예약 정보를 반영한다. 좌석 숫자를 줄인다
+- 예약 취소시 DB에서 Reservation 정보를 삭제하고, Seat 숫자를 추가한다
 
-cd pay
-mvn spring-boot:run 
+티켓 결제
+- 유저 정보를 받아, Balance 를 Check 한다
+- Payrequest 는 기록된다.
+- Approved 된 결제 이력을 확인하고, 취소 시 결제 이력을 삭제한다.
 
-cd store
-mvn spring-boot:run  
+mypage로 구성하였다
+- python + Redis 로 구현
+- Kafka로 모든 정보를 Subscribe 하고, user id 로 검색하여 User 에게 정보를 전달한다.
 
-cd customer
-python policy-handler.py 
+
+
 ```
 
 ## DDD 의 적용
 
-- 각 서비스내에 도출된 핵심 Aggregate Root 객체를 Entity 로 선언하였다: (예시는 pay 마이크로 서비스). 이때 가능한 현업에서 사용하는 언어 (유비쿼터스 랭귀지)를 그대로 사용하려고 노력했다. 하지만, 일부 구현에 있어서 영문이 아닌 경우는 실행이 불가능한 경우가 있기 때문에 계속 사용할 방법은 아닌것 같다. (Maven pom.xml, Kafka의 topic id, FeignClient 의 서비스 id 등은 한글로 식별자를 사용하는 경우 오류가 발생하는 것을 확인하였다)
+- 각 서비스내에 도출된 핵심 Aggregate Root 객체를 Entity 로 선언하였다: (예시는 Reservation 마이크로 서비스). 이때 가능한 현업에서 사용하는 언어 (유비쿼터스 랭귀지)를 그대로 사용하려고 노력했다. 하지만, 일부 구현에 있어서 영문이 아닌 경우는 실행이 불가능한 경우가 있기 때문에 계속 사용할 방법은 아닌것 같다. (Maven pom.xml, Kafka의 topic id, FeignClient 의 서비스 id 등은 한글로 식별자를 사용하는 경우 오류가 발생하는 것을 확인하였다)
 
 ```
-package fooddelivery;
+import lombok.*;
 
-import javax.persistence.*;
-import org.springframework.beans.BeanUtils;
-import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import java.util.Date;
 
-@Entity
-@Table(name="결제이력_table")
-public class 결제이력 {
+@Data
+@NoArgsConstructor
+@Entity(name="reservations")
+public class Reservation {
 
-    @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    private Long id;
-    private String orderId;
-    private Double 금액;
+    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    Long id;
 
-    public Long getId() {
-        return id;
-    }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
-    }
-    public Double get금액() {
-        return 금액;
-    }
-
-    public void set금액(Double 금액) {
-        this.금액 = 금액;
-    }
-
+    Long ticketNumber;
+    String customerName;
+    String customerId;
+    String reservationStatus;
 }
+
 
 ```
 - Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 다양한 데이터소스 유형 (RDB or NoSQL) 에 대한 별도의 처리가 없도록 데이터 접근 어댑터를 자동 생성하기 위하여 Spring Data REST 의 RestRepository 를 적용하였다
 ```
-package fooddelivery;
 
-import org.springframework.data.repository.PagingAndSortingRepository;
+package global.bizdevelope.realmanapp.domain;
 
-public interface 결제이력Repository extends PagingAndSortingRepository<결제이력, Long>{
+import global.bizdevelope.realmanapp.domain.Reservation;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 }
+
+
 ```
 - 적용 후 REST API 의 테스트
 ```
-# app 서비스의 주문처리
-http localhost:8081/orders item="통닭"
+# reservation 서비스의 예매처리
+http post localhost:8081/resrvationreq userId="skccman@naver.com" userName="김인철"
 
-# store 서비스의 배달처리
-http localhost:8083/주문처리s orderId=1
+# payment 서비스의 결제처리
+http post localhost:8082/payrequest userId="skccman@naver.com" userName="김인철"
+위 reservationreq 에서 User 객체를 @RequestBody 로 건네 받는다
 
-# 주문 상태 확인
-http localhost:8081/orders/1
+Transcational 하게 결제를 처리하고, Accepted 와 Refused 여부만 전송한다
+
+# 예매 상태 확인
+http get localhost:8083/myticket{userId}
+예매 상태를 조회한다 (CQRS 적용
 
 ```
 
 
 ## 폴리글랏 퍼시스턴스
 
-앱프런트 (app) 는 서비스 특성상 많은 사용자의 유입과 상품 정보의 다양한 콘텐츠를 저장해야 하는 특징으로 인해 RDB 보다는 Document DB / NoSQL 계열의 데이터베이스인 Mongo DB 를 사용하기로 하였다. 이를 위해 order 의 선언에는 @Entity 가 아닌 @Document 로 마킹되었으며, 별다른 작업없이 기존의 Entity Pattern 과 Repository Pattern 적용과 데이터베이스 제품의 설정 (application.yml) 만으로 MongoDB 에 부착시켰다
+Reservation 과 Payment 서버는 Jpa Repository 를 상속받아 객체 지향적으로
+구성될 수 있게 했다. mysql 서버를 사용하는 것이 Default 이다.
+
+Lombok @Data 와 @Entity 을 사용하여 가독성을 높였다.
 
 ```
-# Order.java
+#Reservation Domain Reservation
 
-package fooddelivery;
+@Data
+@NoArgsConstructor
+@Entity(name="reservations")
+public class Reservation {
 
-@Document
-public class Order {
+    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    Long id;
 
-    private String id; // mongo db 적용시엔 id 는 고정값으로 key가 자동 발급되는 필드기 때문에 @Id 나 @GeneratedValue 를 주지 않아도 된다.
-    private String item;
-    private Integer 수량;
 
+    Long ticketNumber;
+    String customerName;
+    String customerId;
+    String reservationStatus;
 }
 
 
-# 주문Repository.java
-package fooddelivery;
+# ApprovedtRepository.java
 
-public interface 주문Repository extends JpaRepository<Order, UUID>{
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ApprovedRepository extends JpaRepository<Approved, Long> {
+    public void deleteByCustomerId(String userId);
 }
 
-# application.yml
-
-  data:
-    mongodb:
-      host: mongodb.default.svc.cluster.local
-    database: mongo-example
 
 ```
 
 ## 폴리글랏 프로그래밍
 
-고객관리 서비스(customer)의 시나리오인 주문상태, 배달상태 변경에 따라 고객에게 카톡메시지 보내는 기능의 구현 파트는 해당 팀이 python 을 이용하여 구현하기로 하였다. 해당 파이썬 구현체는 각 이벤트를 수신하여 처리하는 Kafka consumer 로 구현되었고 코드는 다음과 같다:
+Python Flask, Redis 와 Kafka Consumer 로 구현 되었다.
+
+
+
 ```
-from flask import Flask
-from redis import Redis, RedisError
+
+# app.py
+
 from kafka import KafkaConsumer
-import os
-import socket
+from json import loads
+
+  # topic, broker list
+consumer = KafkaConsumer( 'topic1',
+bootstrap_servers=['localhost:9092'],
+auto_offset_reset='earliest',
+enable_auto_commit=True,
+group_id='my-group',
+consumer_timeout_ms=1000 ) # consumer list를 가져온다
+print('[begin] get consumer list')
+
+while True:
+    for message in consumer:
+        print("Topic: %s, Partition: %d, Offset: %d, Key: %s, Value: %s" % ( message.topic, message.partition, message.offset, message.key, message.value ))
+        print('[end] get consumer list')
 
 
-# To consume latest messages and auto-commit offsets
-consumer = KafkaConsumer('fooddelivery',
-                         group_id='',
-                         bootstrap_servers=['localhost:9092'])
-for message in consumer:
-    print ("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
-                                          message.offset, message.key,
-                                          message.value))
 
-    # 카톡호출 API
 ```
 
 파이선 애플리케이션을 컴파일하고 실행하기 위한 도커파일은 아래와 같다 (운영단계에서 할일인가? 아니다 여기 까지가 개발자가 할일이다. Immutable Image):
 ```
-FROM python:2.7-slim
+FROM python:3.7
+COPY index.html /app/
+COPY requirements.txt /app/
+COPY app.py /app/
 WORKDIR /app
-ADD . /app
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
-ENV NAME World
-EXPOSE 8090
-CMD ["python", "policy-handler.py"]
+RUN pip install -r requirements.txt
+CMD python -u app.py
 ```
 
 
 ## 동기식 호출 과 Fallback 처리
 
-분석단계에서의 조건 중 하나로 주문(app)->결제(pay) 간의 호출은 동기식 일관성을 유지하는 트랜잭션으로 처리하기로 하였다. 호출 프로토콜은 이미 앞서 Rest Repository 에 의해 노출되어있는 REST 서비스를 FeignClient 를 이용하여 호출하도록 한다. 
+분석단계에서의 조건 중 하나로 예약(app)->결제(pay) 간의 호출은 동기식 일관성을 유지하는 트랜잭션으로 처리하기로 하였다.
+따라서 Service 의 @Transactional 을 이용하여, 일관성을 유지할 수 있도록 하였다.
 
-- 결제서비스를 호출하기 위하여 Stub과 (FeignClient) 를 이용하여 Service 대행 인터페이스 (Proxy) 를 구현 
+- REST @Service 의 @Transactional 을 이용하여 동기식 서비스 구현
 
 ```
-# (app) 결제이력Service.java
+#public class ApproveService
+    @Transactional
+    public boolean approveCheck(User user){
+        PayRequest payRequest = new PayRequest();
+        payRequest.setCustomerId(user.getUserId());
 
-package fooddelivery.external;
+        Boolean isApproved = false;
+        try{
+            isApproved=userRepository.findByUserId(user.getUserId()).isBalance();
+        }catch (Exception e){
+            payRequest.setPaymentStatus("Fail");
+            isApproved=false;
+        }
+        payRequest.setPaymentStatus("Success");
+        payRequestRepository.save(payRequest);
+        saveApproveInfo(user);
+        return isApproved;
 
-@FeignClient(name="pay", url="http://localhost:8082")//, fallback = 결제이력ServiceFallback.class)
-public interface 결제이력Service {
-
-    @RequestMapping(method= RequestMethod.POST, path="/결제이력s")
-    public void 결제(@RequestBody 결제이력 pay);
-
-}
+    }
 ```
 
-- 주문을 받은 직후(@PostPersist) 결제를 요청하도록 처리
+- 결제가 확인 된 이후, 처리
 ```
-# Order.java (Entity)
+# ReservationService.java (Service)
 
-    @PostPersist
-    public void onPostPersist(){
-
-        fooddelivery.external.결제이력 pay = new fooddelivery.external.결제이력();
-        pay.setOrderId(getOrderId());
-        
-        Application.applicationContext.getBean(fooddelivery.external.결제이력Service.class)
-                .결제(pay);
+    @Transactional
+    public String reserve(@RequestBody Reservation reservation){
+        if(approveCheck().equals("Accepted")){
+            Reservation newReservation = reservationRepository.save(reservation);
+            return reservation.
+        }
+        return "Reservation Error";
     }
 ```
 
@@ -366,17 +382,17 @@ public interface 결제이력Service {
 ```
 # 결제 (pay) 서비스를 잠시 내려놓음 (ctrl+c)
 
-#주문처리
-http localhost:8081/orders item=통닭 storeId=1   #Fail
-http localhost:8081/orders item=피자 storeId=2   #Fail
+#예매 처리
+http post localhost:8081/reservationreq userId="test1@naver.com"   #Fail
+http post localhost:8081/cancelreservation userId="test1@naver.com" #Fail
 
 #결제서비스 재기동
 cd 결제
-mvn spring-boot:run
+gradle ./build
 
-#주문처리
-http localhost:8081/orders item=통닭 storeId=1   #Success
-http localhost:8081/orders item=피자 storeId=2   #Success
+#예매 처리
+http post localhost:8081/reservationreq userId="test1@naver.com"  #Success
+http post localhost:8081/cancelreservation userId="test1@naver.com"   #Success
 ```
 
 - 또한 과도한 요청시에 서비스 장애가 도미노 처럼 벌어질 수 있다. (서킷브레이커, 폴백 처리는 운영단계에서 설명한다.)
@@ -387,7 +403,7 @@ http localhost:8081/orders item=피자 storeId=2   #Success
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 / 최종 (Eventual) 일관성 테스트
 
 
-결제가 이루어진 후에 상점시스템으로 이를 알려주는 행위는 동기식이 아니라 비 동기식으로 처리하여 상점 시스템의 처리를 위하여 결제주문이 블로킹 되지 않아도록 처리한다.
+결제가 이루어진 후에 상점시스템으로 이를 알려주는 행위는 동기식이 아니라 비 동기식으로 처리하여 예매 시스템의 처리를 위하여 결제주문이 블로킹 되지 않아도록 처리한다.
  
 - 이를 위하여 결제이력에 기록을 남긴 후에 곧바로 결제승인이 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
  
@@ -399,16 +415,26 @@ package fooddelivery;
 public class 결제이력 {
 
  ...
-    @PrePersist
-    public void onPrePersist(){
-        결제승인됨 결제승인됨 = new 결제승인됨();
-        BeanUtils.copyProperties(this, 결제승인됨);
-        결제승인됨.publish();
-    }
+    @Transactional
+    public String cancelReservation(User user){
+        List<Reservation> reservationList;
 
-}
+        try{
+        reservationList=reservationRepository.findByCustomerId(user.getUserId());
+        if(reservationList==null) {
+            return "Refused";
+        }
+        for (Reservation r:reservationList){
+            cancelled.publish(user.getUserId()+":Cancelled:"+r.getId());
+            reservationRepository.delete(r.getId());
+        }
+        }catch (Exception e){
+            return "Error";
+        }
+        return "Cancelled";
+    }
 ```
-- 상점 서비스에서는 결제승인 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
+- Mypage 에서는 해당 Event 를 수신받아 처리한다
 
 ```
 package fooddelivery;
@@ -480,40 +506,21 @@ http localhost:8080/orders     # 모든 주문의 상태가 "배송됨"으로 �
 
 ## 동기식 호출 / 서킷 브레이킹 / 장애격리
 
-* 서킷 브레이킹 프레임워크의 선택: Spring FeignClient + Hystrix 옵션을 사용하여 구현함
+TBD
 
-시나리오는 단말앱(app)-->결제(pay) 시의 연결을 RESTful Request/Response 로 연동하여 구현이 되어있고, 결제 요청이 과도할 경우 CB 를 통하여 장애격리.
-
-- Hystrix 를 설정:  요청처리 쓰레드에서 처리시간이 610 밀리가 넘어서기 시작하여 어느정도 유지되면 CB 회로가 닫히도록 (요청을 빠르게 실패처리, 차단) 설정
-```
-# application.yml
-feign:
-  hystrix:
-    enabled: true
-    
-hystrix:
-  command:
-    # 전역설정
-    default:
-      execution.isolation.thread.timeoutInMilliseconds: 610
 
 ```
 
-- 피호출 서비스(결제:pay) 의 임의 부하 처리 - 400 밀리에서 증감 220 밀리 정도 왔다갔다 하게
+TBD
+
 ```
 # (pay) 결제이력.java (Entity)
 
-    @PrePersist
-    public void onPrePersist(){  //결제이력을 저장한 후 적당한 시간 끌기
 
-        ...
-        
-        try {
-            Thread.currentThread().sleep((long) (400 + Math.random() * 220));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+
+
+
+
 ```
 
 * 부하테스터 siege 툴을 통한 서킷 브레이커 동작 확인:
