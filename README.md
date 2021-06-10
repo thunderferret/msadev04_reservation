@@ -113,12 +113,10 @@ Assessment : X
 ![](./images/msaezteam.png){:height="50%" width="50%"}
 
 
-구 Team 프로젝트 주소
-https://github.com/JunHxLee/moviereservation
+- 구 Team 프로젝트 주소
+- https://github.com/JunHxLee/moviereservation
 
-구 Team 프로젝트에서, 영화 예매 어플리케이션을 구현 하였다.
-이전에 있던 프로젝트는 내가 주로 개발하는 환경이 아니기도 하고,
-해당 어플리케이션에서 스프링 부트 버전이나, maven, Docker Version 등을 변경하고자
+구 Team 프로젝트에서, 영화 예매 어플리케이션을 구현 하였다. 이전에 있던 프로젝트는 내가 주로 개발하는 환경이 아니기도 하고, 해당 어플리케이션에서 스프링 부트 버전이나, maven, Docker Version 등을 변경하고자
 
 Zero - Base 에서 다시 어플리케이션을 구현하였다.
 
@@ -126,9 +124,9 @@ Gradle 7.x 과 SpringBoot 2.5.X 버전, K8S 1.9, Docker 20.0.4 를 사용한 환
 
 EKS 1.14, Docker19 등에서는 현재 설정 에러로 Gradle 기반 프로젝트가 작동하지 않는 상황.
 (Docker 19 버전 이상을 지원하지 않음)
-jar 등으로 배포하는 것을 권장
+jar 등으로 배포하는 것을 권장드림
 
-기능적 요구사항
+### 기능적 요구사항
 1. 고객이 예매를 한다.
 1. 남은 좌석이 있으면 결제할 수 있다.
 1. 결제가 되면, 좌석이 배정된다.
