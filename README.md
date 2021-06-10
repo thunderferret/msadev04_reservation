@@ -31,24 +31,31 @@ Assessment : X
 Myapp 에서 구현
 Local : 0
 Assessment : X
-(Gradle 기반 서버가 작동하지 않으므로)
+(Gradle 기반 서버가 작동하지 않으므로 Error 발생)
 
 1. CQRS
 Event Kafka 로 발송하여, Python Consumer 에서 볼 수 있음
 Local : 0
 Assessment : X
 
+![](./images/cqrsproove.png){:height="50%" width="50%"}
+
+Kafka Consumer Message 를 Python 서버에서 처리
+
+
 1. Correlation
 REST 를 이용한 Sync 호출 사용
 Local : 0
 Assessment : X
 
+GITHUB 코드 Contorller, Service 확인 부탁 드립니다.
 
 1. Req/Resp
 REST 이용
 Local : 0
 Assessment : X
 
+GITHUB 코드 Controller, Service 확인 부탁 드립니다.
 
 1. Gateway
 Spring cloud Gateway 이용
@@ -102,7 +109,12 @@ Assessment : X
 
 # 서비스 시나리오
 
-![](./images/01_msaez_team.png){:height="50%" width="50%"}
+
+![](./images/msaezteam.png){:height="50%" width="50%"}
+
+
+구 Team 프로젝트 주소
+https://github.com/JunHxLee/moviereservation
 
 구 Team 프로젝트에서, 영화 예매 어플리케이션을 구현 하였다.
 이전에 있던 프로젝트는 내가 주로 개발하는 환경이 아니기도 하고,
